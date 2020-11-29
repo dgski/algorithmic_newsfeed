@@ -36,6 +36,21 @@
 			}
 		}
 	})
+
+	function openAddFeedDialog() {
+		let response = prompt("Paste feed URL:")
+		if(response != null) {
+			console.log(response)
+			fetch(API_URL + 'add-feed?feed=' + response)
+			.then(r => {
+				if(r.ok) {
+					alert("Feed Added Succesfully");
+				} else {
+					alert("Problem adding feed.");
+				}
+			})
+		}
+	}
 </script>
 
 <style>
@@ -52,6 +67,11 @@
 		padding: 30px;
 	}
 
+	#header button {
+		font-size: 13px;
+		margin: 10px;
+	}
+
 	#holder {
 		width: 500px;
 		margin-left: calc(50% - 250px);
@@ -65,7 +85,7 @@
 </style>
 
 <div id="header">
-	Algorithmic Feed
+	Algorithmic Feed <button on:click={openAddFeedDialog}>Add To Feed</button>
 </div>
 
 <div id="holder" bind:this={holder}>

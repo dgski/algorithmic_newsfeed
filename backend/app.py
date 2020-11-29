@@ -1,4 +1,5 @@
 import flask
+from flask import request
 from flask_cors import CORS, cross_origin
 import pandas as pd
 import sklearn as sk
@@ -39,9 +40,9 @@ def rss_entry_to_dict(entry):
 def init_sources():
     feeds = [
         "https://gizmodo.com/rss",
-        "https://www.theverge.com/.rss",
-        "http://feeds.arstechnica.com/arstechnica/index",
-        "https://www.engadget.com/rss.xml"
+        #"https://www.theverge.com/.rss",
+        #"http://feeds.arstechnica.com/arstechnica/index",
+        #"https://www.engadget.com/rss.xml"
         #"https://www.strongtowns.org/journal/?format=rss",
         #"https://www.citylab.com/feeds/posts/",
         #"https://reddit.com/r/programming/.rss"
@@ -116,4 +117,28 @@ def report_good(post_id: int):
 @cross_origin()
 def report_bad(post_id: int):
     bad_posts.append(post_id)
+    return 'Ok'
+
+@app.route('/add-feed')
+@cross_origin()
+def add_feed():
+    f = request.args.get('feed')
+    data = feedparser.parse(f)
+    for entry in data.entries:
+        prepared_entry = rss_entry_to_dict(entry)
+        documents[prepared_entry['id']] = prepared_entry
+
+    doc_data = pd.DataFrame.from_records([d for d in documents.values()])
+
+    vectorizer = CountVectorizer()
+    word_counts = vectorizer.fit_transform(doc_data.title + doc_data.summary)
+
+    for index, row in doc_data.iterrows():
+        for index2, row2 in doc_data.iterrows():
+            if index==index2:
+                continue
+            cs = cosine_similarity(word_counts[index], word_counts[index2])
+            similarities[row['id']][row2['id']] = float(cs)
+            similarities[row2['id']][row['id']] = float(cs)
+
     return 'Ok'
